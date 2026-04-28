@@ -14,3 +14,16 @@ import * as zod from "zod";
 export const HealthCheckResponse = zod.object({
   status: zod.string(),
 });
+
+/**
+ * Returns the profile of the currently signed-in user. Creates a local user record on first call.
+ * @summary Current authenticated user
+ */
+export const GetMeResponse = zod.object({
+  id: zod.string().describe("Clerk user id"),
+  email: zod.string().nullable(),
+  firstName: zod.string().nullable(),
+  lastName: zod.string().nullable(),
+  imageUrl: zod.string().nullable(),
+  createdAt: zod.coerce.date(),
+});
