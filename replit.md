@@ -28,7 +28,7 @@ See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and pa
 
 ## Active Project: Job Hunt Toolkit
 
-A personal job-search companion web app with three workspaces: Job Tracker, Resume Match, and Interview Prep. Currently the **shell** is complete — landing page, branded sign-in/sign-up, authenticated portal nav, and placeholder pages for the three workspaces. Real workspace functionality is not yet built.
+A personal job-search companion web app with three workspaces: Job Tracker, Resume Match, and Interview Prep. Job Tracker is fully built (CRUD applications, stage transitions, notes timeline, pipeline overview). Resume Match and Interview Prep are still placeholders.
 
 ### Artifacts
 - `artifacts/job-hunt` — React + Vite web app (preview path `/`)
@@ -39,16 +39,29 @@ A personal job-search companion web app with three workspaces: Job Tracker, Resu
 Replit-managed Clerk via `@clerk/express` (server) and `@clerk/react` + `@clerk/themes` (client). The Clerk Frontend API proxy is mounted at `/api/__clerk` (production only). Auth UI is themed via custom `appearance` and tokens in `artifacts/job-hunt/src/index.css`.
 
 ### Database
-Single shared Postgres database. Schema lives in `lib/db/src/schema/`. Currently one table:
+Single shared Postgres database. Schema lives in `lib/db/src/schema/`. Tables:
 - `users` — keyed by Clerk user id (`text` PK), upserted by `GET /api/me` on first authenticated call.
+- `job_applications` — user-scoped (FK to `users.id`, cascade delete). Stages: Saved, Applied, Interviewing, Offer, Rejected.
+- `application_notes` — user-scoped, FK to `job_applications.id` (cascade delete). Free-form note bodies with timestamps.
 
 ### API Endpoints
 - `GET /api/healthz` — health check
 - `GET /api/me` — returns the current authenticated user (creates the local row on first call)
+- `GET /api/applications` — list current user's applications (most recently updated first)
+- `POST /api/applications` — create an application
+- `GET /api/applications/{id}` — fetch one application with its notes
+- `PATCH /api/applications/{id}` — partial update (including stage transitions)
+- `DELETE /api/applications/{id}` — delete an application (cascades to notes)
+- `POST /api/applications/{id}/notes` — add a note (touches parent `updatedAt`)
+- `DELETE /api/applications/{id}/notes/{noteId}` — delete a note
+- `GET /api/pipeline-summary` — counts per stage + 5 most recent activity entries
 
 ### Key Files
 - `lib/api-spec/openapi.yaml` — API contract; re-run `pnpm --filter @workspace/api-spec run codegen` after edits
 - `artifacts/api-server/src/middlewares/clerkProxyMiddleware.ts` — Clerk FAPI proxy
 - `artifacts/api-server/src/middlewares/requireAuth.ts` — auth guard
 - `artifacts/api-server/src/routes/me.ts` — `/me` endpoint with first-call upsert
+- `artifacts/api-server/src/routes/applications.ts` — applications + notes + pipeline-summary endpoints
 - `artifacts/job-hunt/src/App.tsx` — ClerkProvider, routes, and HomeRedirect logic
+- `artifacts/job-hunt/src/pages/job-tracker.tsx` — Job Tracker page (list grouped by stage, inline stage select, edit/delete)
+- `artifacts/job-hunt/src/components/job-tracker/` — application form dialog, detail sheet (with notes timeline), pipeline overview, shared utils

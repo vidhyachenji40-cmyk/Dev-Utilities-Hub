@@ -27,3 +27,178 @@ export const GetMeResponse = zod.object({
   imageUrl: zod.string().nullable(),
   createdAt: zod.coerce.date(),
 });
+
+/**
+ * Returns all job applications for the signed-in user, most recently updated first.
+ * @summary List job applications
+ */
+export const ListApplicationsResponse = zod.object({
+  applications: zod.array(
+    zod.object({
+      id: zod.string().uuid(),
+      company: zod.string(),
+      role: zod.string(),
+      link: zod.string().nullable(),
+      location: zod.string().nullable(),
+      salaryMin: zod.string().nullable(),
+      salaryMax: zod.string().nullable(),
+      source: zod.string().nullable(),
+      status: zod.enum([
+        "Saved",
+        "Applied",
+        "Interviewing",
+        "Offer",
+        "Rejected",
+      ]),
+      createdAt: zod.coerce.date(),
+      updatedAt: zod.coerce.date(),
+    }),
+  ),
+});
+
+/**
+ * @summary Create a job application
+ */
+
+export const CreateApplicationBody = zod.object({
+  company: zod.string().min(1),
+  role: zod.string().min(1),
+  link: zod.string().nullish(),
+  location: zod.string().nullish(),
+  salaryMin: zod.string().nullish(),
+  salaryMax: zod.string().nullish(),
+  source: zod.string().nullish(),
+  status: zod
+    .enum(["Saved", "Applied", "Interviewing", "Offer", "Rejected"])
+    .optional(),
+});
+
+/**
+ * @summary Get a single job application with notes
+ */
+export const GetApplicationParams = zod.object({
+  id: zod.coerce.string().uuid(),
+});
+
+export const GetApplicationResponse = zod.object({
+  application: zod.object({
+    id: zod.string().uuid(),
+    company: zod.string(),
+    role: zod.string(),
+    link: zod.string().nullable(),
+    location: zod.string().nullable(),
+    salaryMin: zod.string().nullable(),
+    salaryMax: zod.string().nullable(),
+    source: zod.string().nullable(),
+    status: zod.enum(["Saved", "Applied", "Interviewing", "Offer", "Rejected"]),
+    createdAt: zod.coerce.date(),
+    updatedAt: zod.coerce.date(),
+  }),
+  notes: zod.array(
+    zod.object({
+      id: zod.string().uuid(),
+      applicationId: zod.string().uuid(),
+      body: zod.string(),
+      createdAt: zod.coerce.date(),
+    }),
+  ),
+});
+
+/**
+ * @summary Update a job application
+ */
+export const UpdateApplicationParams = zod.object({
+  id: zod.coerce.string().uuid(),
+});
+
+export const UpdateApplicationBody = zod.object({
+  company: zod.string().min(1).optional(),
+  role: zod.string().min(1).optional(),
+  link: zod.string().nullish(),
+  location: zod.string().nullish(),
+  salaryMin: zod.string().nullish(),
+  salaryMax: zod.string().nullish(),
+  source: zod.string().nullish(),
+  status: zod
+    .enum(["Saved", "Applied", "Interviewing", "Offer", "Rejected"])
+    .optional(),
+});
+
+export const UpdateApplicationResponse = zod.object({
+  id: zod.string().uuid(),
+  company: zod.string(),
+  role: zod.string(),
+  link: zod.string().nullable(),
+  location: zod.string().nullable(),
+  salaryMin: zod.string().nullable(),
+  salaryMax: zod.string().nullable(),
+  source: zod.string().nullable(),
+  status: zod.enum(["Saved", "Applied", "Interviewing", "Offer", "Rejected"]),
+  createdAt: zod.coerce.date(),
+  updatedAt: zod.coerce.date(),
+});
+
+/**
+ * @summary Delete a job application
+ */
+export const DeleteApplicationParams = zod.object({
+  id: zod.coerce.string().uuid(),
+});
+
+/**
+ * @summary Add a note or activity entry to an application
+ */
+export const CreateApplicationNoteParams = zod.object({
+  id: zod.coerce.string().uuid(),
+});
+
+export const CreateApplicationNoteBody = zod.object({
+  body: zod.string().min(1),
+});
+
+/**
+ * @summary Delete a note from an application
+ */
+export const DeleteApplicationNoteParams = zod.object({
+  id: zod.coerce.string().uuid(),
+  noteId: zod.coerce.string().uuid(),
+});
+
+/**
+ * Returns counts of applications per stage plus the most recent activity for the signed-in user.
+ * @summary Pipeline counts and recent activity
+ */
+export const getPipelineSummaryResponseTotalMin = 0;
+
+export const getPipelineSummaryResponseStagesItemCountMin = 0;
+
+export const GetPipelineSummaryResponse = zod.object({
+  total: zod.number().min(getPipelineSummaryResponseTotalMin),
+  stages: zod.array(
+    zod.object({
+      status: zod.enum([
+        "Saved",
+        "Applied",
+        "Interviewing",
+        "Offer",
+        "Rejected",
+      ]),
+      count: zod.number().min(getPipelineSummaryResponseStagesItemCountMin),
+    }),
+  ),
+  recentActivity: zod.array(
+    zod.object({
+      applicationId: zod.string().uuid(),
+      company: zod.string(),
+      role: zod.string(),
+      status: zod.enum([
+        "Saved",
+        "Applied",
+        "Interviewing",
+        "Offer",
+        "Rejected",
+      ]),
+      updatedAt: zod.coerce.date(),
+    }),
+  ),
+});

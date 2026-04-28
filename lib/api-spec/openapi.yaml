@@ -12,6 +12,8 @@ tags:
     description: Health operations
   - name: users
     description: Authenticated user operations
+  - name: applications
+    description: Job application tracking operations
 paths:
   /healthz:
     get:
@@ -39,6 +41,234 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/CurrentUser"
+        "401":
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /applications:
+    get:
+      operationId: listApplications
+      tags: [applications]
+      summary: List job applications
+      description: Returns all job applications for the signed-in user, most recently updated first.
+      responses:
+        "200":
+          description: List of applications
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JobApplicationList"
+        "401":
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    post:
+      operationId: createApplication
+      tags: [applications]
+      summary: Create a job application
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateJobApplicationRequest"
+      responses:
+        "201":
+          description: Created application
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JobApplication"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /applications/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      operationId: getApplication
+      tags: [applications]
+      summary: Get a single job application with notes
+      responses:
+        "200":
+          description: The application with notes
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JobApplicationDetail"
+        "401":
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    patch:
+      operationId: updateApplication
+      tags: [applications]
+      summary: Update a job application
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateJobApplicationRequest"
+      responses:
+        "200":
+          description: Updated application
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JobApplication"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      operationId: deleteApplication
+      tags: [applications]
+      summary: Delete a job application
+      responses:
+        "204":
+          description: Deleted
+        "401":
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /applications/{id}/notes:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    post:
+      operationId: createApplicationNote
+      tags: [applications]
+      summary: Add a note or activity entry to an application
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateApplicationNoteRequest"
+      responses:
+        "201":
+          description: Created note
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApplicationNote"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /applications/{id}/notes/{noteId}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: noteId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    delete:
+      operationId: deleteApplicationNote
+      tags: [applications]
+      summary: Delete a note from an application
+      responses:
+        "204":
+          description: Deleted
+        "401":
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /pipeline-summary:
+    get:
+      operationId: getPipelineSummary
+      tags: [applications]
+      summary: Pipeline counts and recent activity
+      description: Returns counts of applications per stage plus the most recent activity for the signed-in user.
+      responses:
+        "200":
+          description: Pipeline summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PipelineSummary"
         "401":
           description: Not authenticated
           content:
@@ -85,3 +315,194 @@ components:
           type: string
       required:
         - error
+    JobApplicationStatus:
+      type: string
+      enum:
+        - Saved
+        - Applied
+        - Interviewing
+        - Offer
+        - Rejected
+    JobApplication:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        company:
+          type: string
+        role:
+          type: string
+        link:
+          type: ["string", "null"]
+        location:
+          type: ["string", "null"]
+        salaryMin:
+          type: ["string", "null"]
+        salaryMax:
+          type: ["string", "null"]
+        source:
+          type: ["string", "null"]
+        status:
+          $ref: "#/components/schemas/JobApplicationStatus"
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - company
+        - role
+        - link
+        - location
+        - salaryMin
+        - salaryMax
+        - source
+        - status
+        - createdAt
+        - updatedAt
+    JobApplicationList:
+      type: object
+      properties:
+        applications:
+          type: array
+          items:
+            $ref: "#/components/schemas/JobApplication"
+      required:
+        - applications
+    ApplicationNote:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        applicationId:
+          type: string
+          format: uuid
+        body:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - applicationId
+        - body
+        - createdAt
+    JobApplicationDetail:
+      type: object
+      properties:
+        application:
+          $ref: "#/components/schemas/JobApplication"
+        notes:
+          type: array
+          items:
+            $ref: "#/components/schemas/ApplicationNote"
+      required:
+        - application
+        - notes
+    CreateJobApplicationRequest:
+      type: object
+      properties:
+        company:
+          type: string
+          minLength: 1
+        role:
+          type: string
+          minLength: 1
+        link:
+          type: ["string", "null"]
+        location:
+          type: ["string", "null"]
+        salaryMin:
+          type: ["string", "null"]
+        salaryMax:
+          type: ["string", "null"]
+        source:
+          type: ["string", "null"]
+        status:
+          $ref: "#/components/schemas/JobApplicationStatus"
+      required:
+        - company
+        - role
+    UpdateJobApplicationRequest:
+      type: object
+      properties:
+        company:
+          type: string
+          minLength: 1
+        role:
+          type: string
+          minLength: 1
+        link:
+          type: ["string", "null"]
+        location:
+          type: ["string", "null"]
+        salaryMin:
+          type: ["string", "null"]
+        salaryMax:
+          type: ["string", "null"]
+        source:
+          type: ["string", "null"]
+        status:
+          $ref: "#/components/schemas/JobApplicationStatus"
+    CreateApplicationNoteRequest:
+      type: object
+      properties:
+        body:
+          type: string
+          minLength: 1
+      required:
+        - body
+    PipelineStageCount:
+      type: object
+      properties:
+        status:
+          $ref: "#/components/schemas/JobApplicationStatus"
+        count:
+          type: integer
+          minimum: 0
+      required:
+        - status
+        - count
+    PipelineRecentActivity:
+      type: object
+      properties:
+        applicationId:
+          type: string
+          format: uuid
+        company:
+          type: string
+        role:
+          type: string
+        status:
+          $ref: "#/components/schemas/JobApplicationStatus"
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - applicationId
+        - company
+        - role
+        - status
+        - updatedAt
+    PipelineSummary:
+      type: object
+      properties:
+        total:
+          type: integer
+          minimum: 0
+        stages:
+          type: array
+          items:
+            $ref: "#/components/schemas/PipelineStageCount"
+        recentActivity:
+          type: array
+          items:
+            $ref: "#/components/schemas/PipelineRecentActivity"
+      required:
+        - total
+        - stages
+        - recentActivity

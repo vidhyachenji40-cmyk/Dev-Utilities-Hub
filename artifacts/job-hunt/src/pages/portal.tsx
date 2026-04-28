@@ -1,6 +1,6 @@
 import { Link } from "wouter";
 import { Briefcase, FileText, Mic, ArrowRight } from "lucide-react";
-import { CurrentUser } from "@workspace/api-client-react/src/generated/api.schemas";
+import type { CurrentUser } from "@workspace/api-client-react";
 
 export default function Portal({ user }: { user?: CurrentUser }) {
   return (

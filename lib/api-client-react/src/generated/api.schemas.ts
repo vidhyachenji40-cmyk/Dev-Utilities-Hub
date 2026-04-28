@@ -26,3 +26,111 @@ export interface CurrentUser {
 export interface ErrorResponse {
   error: string;
 }
+
+export type JobApplicationStatus =
+  (typeof JobApplicationStatus)[keyof typeof JobApplicationStatus];
+
+export const JobApplicationStatus = {
+  Saved: "Saved",
+  Applied: "Applied",
+  Interviewing: "Interviewing",
+  Offer: "Offer",
+  Rejected: "Rejected",
+} as const;
+
+export interface JobApplication {
+  id: string;
+  company: string;
+  role: string;
+  /** @nullable */
+  link: string | null;
+  /** @nullable */
+  location: string | null;
+  /** @nullable */
+  salaryMin: string | null;
+  /** @nullable */
+  salaryMax: string | null;
+  /** @nullable */
+  source: string | null;
+  status: JobApplicationStatus;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface JobApplicationList {
+  applications: JobApplication[];
+}
+
+export interface ApplicationNote {
+  id: string;
+  applicationId: string;
+  body: string;
+  createdAt: string;
+}
+
+export interface JobApplicationDetail {
+  application: JobApplication;
+  notes: ApplicationNote[];
+}
+
+export interface CreateJobApplicationRequest {
+  /** @minLength 1 */
+  company: string;
+  /** @minLength 1 */
+  role: string;
+  /** @nullable */
+  link?: string | null;
+  /** @nullable */
+  location?: string | null;
+  /** @nullable */
+  salaryMin?: string | null;
+  /** @nullable */
+  salaryMax?: string | null;
+  /** @nullable */
+  source?: string | null;
+  status?: JobApplicationStatus;
+}
+
+export interface UpdateJobApplicationRequest {
+  /** @minLength 1 */
+  company?: string;
+  /** @minLength 1 */
+  role?: string;
+  /** @nullable */
+  link?: string | null;
+  /** @nullable */
+  location?: string | null;
+  /** @nullable */
+  salaryMin?: string | null;
+  /** @nullable */
+  salaryMax?: string | null;
+  /** @nullable */
+  source?: string | null;
+  status?: JobApplicationStatus;
+}
+
+export interface CreateApplicationNoteRequest {
+  /** @minLength 1 */
+  body: string;
+}
+
+export interface PipelineStageCount {
+  status: JobApplicationStatus;
+  /** @minimum 0 */
+  count: number;
+}
+
+export interface PipelineRecentActivity {
+  applicationId: string;
+  company: string;
+  role: string;
+  status: JobApplicationStatus;
+  updatedAt: string;
+}
+
+export interface PipelineSummary {
+  /** @minimum 0 */
+  total: number;
+  stages: PipelineStageCount[];
+  recentActivity: PipelineRecentActivity[];
+}
