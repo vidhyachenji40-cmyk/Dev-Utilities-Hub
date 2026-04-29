@@ -1,7 +1,32 @@
-import { Mic, Play } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { useState } from "react";
+import { Mic } from "lucide-react";
+import type {
+  InterviewSession,
+  InterviewSessionDetail,
+} from "@workspace/api-client-react";
+
+import { SessionForm } from "@/components/interview-prep/session-form";
+import { SessionsHistory } from "@/components/interview-prep/sessions-history";
+import { SessionRunner } from "@/components/interview-prep/session-runner";
+
+type ActiveSession = {
+  id: string;
+  initialDetail?: InterviewSessionDetail;
+};
 
 export default function InterviewPrep() {
+  const [active, setActive] = useState<ActiveSession | null>(null);
+
+  if (active) {
+    return (
+      <SessionRunner
+        sessionId={active.id}
+        initialDetail={active.initialDetail}
+        onBack={() => setActive(null)}
+      />
+    );
+  }
+
   return (
     <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
@@ -10,22 +35,20 @@ export default function InterviewPrep() {
             <Mic className="h-8 w-8 text-chart-4" /> Interview Prep
           </h1>
           <p className="text-muted-foreground mt-2 text-lg">
-            Practice answering questions in a low-pressure environment.
+            Generate tailored questions, write answers, and get AI feedback.
           </p>
         </div>
-        <Button className="shrink-0" disabled variant="secondary">
-          <Play className="mr-2 h-4 w-4" /> Start Mock Session
-        </Button>
       </div>
 
-      <div className="rounded-2xl border border-dashed border-border bg-card/50 p-12 text-center flex flex-col items-center justify-center min-h-[400px]">
-        <div className="h-16 w-16 bg-chart-4/10 text-chart-4 rounded-full flex items-center justify-center mb-6">
-          <Mic className="h-8 w-8" />
-        </div>
-        <h2 className="text-xl font-semibold mb-2 text-card-foreground">Build your confidence</h2>
-        <p className="text-muted-foreground max-w-md mx-auto mb-8">
-          Soon you'll be able to review structured prompts, record your answers, and refine your storytelling before stepping into the real interview room.
-        </p>
+      <div className="space-y-6">
+        <SessionForm
+          onCreated={(detail) =>
+            setActive({ id: detail.session.id, initialDetail: detail })
+          }
+        />
+        <SessionsHistory
+          onOpen={(s: InterviewSession) => setActive({ id: s.id })}
+        />
       </div>
     </div>
   );

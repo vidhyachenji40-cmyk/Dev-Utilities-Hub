@@ -202,3 +202,189 @@ export const GetPipelineSummaryResponse = zod.object({
     }),
   ),
 });
+
+/**
+ * Returns all interview sessions for the signed-in user, most recently created first.
+ * @summary List interview prep sessions
+ */
+export const listInterviewSessionsResponseSessionsItemQuestionCountMin = 0;
+
+export const listInterviewSessionsResponseSessionsItemAnsweredCountMin = 0;
+
+export const ListInterviewSessionsResponse = zod.object({
+  sessions: zod.array(
+    zod.object({
+      id: zod.string().uuid(),
+      role: zod.string(),
+      level: zod.enum(["Intern", "Junior", "Mid", "Senior", "Staff"]),
+      focus: zod.enum(["Behavioral", "Technical", "Mixed"]),
+      company: zod.string().nullable(),
+      notes: zod.string().nullable(),
+      applicationId: zod.string().uuid().nullable(),
+      questionCount: zod
+        .number()
+        .min(listInterviewSessionsResponseSessionsItemQuestionCountMin),
+      answeredCount: zod
+        .number()
+        .min(listInterviewSessionsResponseSessionsItemAnsweredCountMin),
+      createdAt: zod.coerce.date(),
+      updatedAt: zod.coerce.date(),
+    }),
+  ),
+});
+
+/**
+ * Generates a curated mix of questions tailored to the requested role/level/focus and returns the new session.
+ * @summary Start an interview session
+ */
+
+export const createInterviewSessionBodyQuestionCountMin = 3;
+export const createInterviewSessionBodyQuestionCountMax = 10;
+
+export const CreateInterviewSessionBody = zod.object({
+  role: zod.string().min(1),
+  level: zod.enum(["Intern", "Junior", "Mid", "Senior", "Staff"]),
+  focus: zod.enum(["Behavioral", "Technical", "Mixed"]),
+  company: zod.string().nullish(),
+  notes: zod.string().nullish(),
+  applicationId: zod.string().uuid().nullish(),
+  questionCount: zod
+    .number()
+    .min(createInterviewSessionBodyQuestionCountMin)
+    .max(createInterviewSessionBodyQuestionCountMax)
+    .optional(),
+});
+
+/**
+ * @summary Get an interview session with all answers and feedback
+ */
+export const GetInterviewSessionParams = zod.object({
+  id: zod.coerce.string().uuid(),
+});
+
+export const getInterviewSessionResponseSessionQuestionCountMin = 0;
+
+export const getInterviewSessionResponseSessionAnsweredCountMin = 0;
+
+export const getInterviewSessionResponseAnswersItemFeedbackOneClarityMax = 5;
+
+export const getInterviewSessionResponseAnswersItemFeedbackOneStructureMax = 5;
+
+export const getInterviewSessionResponseAnswersItemFeedbackOneSpecificityMax = 5;
+
+export const GetInterviewSessionResponse = zod.object({
+  session: zod.object({
+    id: zod.string().uuid(),
+    role: zod.string(),
+    level: zod.enum(["Intern", "Junior", "Mid", "Senior", "Staff"]),
+    focus: zod.enum(["Behavioral", "Technical", "Mixed"]),
+    company: zod.string().nullable(),
+    notes: zod.string().nullable(),
+    applicationId: zod.string().uuid().nullable(),
+    questionCount: zod
+      .number()
+      .min(getInterviewSessionResponseSessionQuestionCountMin),
+    answeredCount: zod
+      .number()
+      .min(getInterviewSessionResponseSessionAnsweredCountMin),
+    createdAt: zod.coerce.date(),
+    updatedAt: zod.coerce.date(),
+  }),
+  questions: zod.array(
+    zod.object({
+      id: zod.string(),
+      type: zod.enum(["Behavioral", "Technical"]),
+      text: zod.string(),
+      starHint: zod.string().nullable(),
+    }),
+  ),
+  answers: zod.array(
+    zod.object({
+      id: zod.string().uuid(),
+      sessionId: zod.string().uuid(),
+      questionId: zod.string(),
+      questionText: zod.string(),
+      body: zod.string(),
+      feedback: zod.union([
+        zod.object({
+          clarity: zod
+            .number()
+            .min(1)
+            .max(getInterviewSessionResponseAnswersItemFeedbackOneClarityMax),
+          structure: zod
+            .number()
+            .min(1)
+            .max(getInterviewSessionResponseAnswersItemFeedbackOneStructureMax),
+          specificity: zod
+            .number()
+            .min(1)
+            .max(
+              getInterviewSessionResponseAnswersItemFeedbackOneSpecificityMax,
+            ),
+          summary: zod.string(),
+          strengths: zod.array(zod.string()),
+          improvements: zod.array(zod.string()),
+        }),
+        zod.null(),
+      ]),
+      createdAt: zod.coerce.date(),
+      updatedAt: zod.coerce.date(),
+    }),
+  ),
+});
+
+/**
+ * @summary Delete an interview session
+ */
+export const DeleteInterviewSessionParams = zod.object({
+  id: zod.coerce.string().uuid(),
+});
+
+/**
+ * Saves the answer for the given question and returns AI-generated feedback (clarity, structure, specificity, strengths, improvements).
+ * @summary Submit an answer and receive AI feedback
+ */
+export const SubmitInterviewAnswerParams = zod.object({
+  id: zod.coerce.string().uuid(),
+});
+
+export const SubmitInterviewAnswerBody = zod.object({
+  questionId: zod.string().min(1),
+  body: zod.string().min(1),
+});
+
+export const submitInterviewAnswerResponseFeedbackOneClarityMax = 5;
+
+export const submitInterviewAnswerResponseFeedbackOneStructureMax = 5;
+
+export const submitInterviewAnswerResponseFeedbackOneSpecificityMax = 5;
+
+export const SubmitInterviewAnswerResponse = zod.object({
+  id: zod.string().uuid(),
+  sessionId: zod.string().uuid(),
+  questionId: zod.string(),
+  questionText: zod.string(),
+  body: zod.string(),
+  feedback: zod.union([
+    zod.object({
+      clarity: zod
+        .number()
+        .min(1)
+        .max(submitInterviewAnswerResponseFeedbackOneClarityMax),
+      structure: zod
+        .number()
+        .min(1)
+        .max(submitInterviewAnswerResponseFeedbackOneStructureMax),
+      specificity: zod
+        .number()
+        .min(1)
+        .max(submitInterviewAnswerResponseFeedbackOneSpecificityMax),
+      summary: zod.string(),
+      strengths: zod.array(zod.string()),
+      improvements: zod.array(zod.string()),
+    }),
+    zod.null(),
+  ]),
+  createdAt: zod.coerce.date(),
+  updatedAt: zod.coerce.date(),
+});

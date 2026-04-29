@@ -14,6 +14,8 @@ tags:
     description: Authenticated user operations
   - name: applications
     description: Job application tracking operations
+  - name: interview
+    description: Interview prep sessions, questions, and AI feedback
 paths:
   /healthz:
     get:
@@ -275,6 +277,167 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+  /interview/sessions:
+    get:
+      operationId: listInterviewSessions
+      tags: [interview]
+      summary: List interview prep sessions
+      description: Returns all interview sessions for the signed-in user, most recently created first.
+      responses:
+        "200":
+          description: List of sessions
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InterviewSessionList"
+        "401":
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    post:
+      operationId: createInterviewSession
+      tags: [interview]
+      summary: Start an interview session
+      description: Generates a curated mix of questions tailored to the requested role/level/focus and returns the new session.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateInterviewSessionRequest"
+      responses:
+        "201":
+          description: Created session with generated questions
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InterviewSessionDetail"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "502":
+          description: Upstream AI request failed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /interview/sessions/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      operationId: getInterviewSession
+      tags: [interview]
+      summary: Get an interview session with all answers and feedback
+      responses:
+        "200":
+          description: Session detail with answers
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InterviewSessionDetail"
+        "401":
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      operationId: deleteInterviewSession
+      tags: [interview]
+      summary: Delete an interview session
+      responses:
+        "204":
+          description: Deleted
+        "401":
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /interview/sessions/{id}/answers:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    post:
+      operationId: submitInterviewAnswer
+      tags: [interview]
+      summary: Submit an answer and receive AI feedback
+      description: Saves the answer for the given question and returns AI-generated feedback (clarity, structure, specificity, strengths, improvements).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SubmitInterviewAnswerRequest"
+      responses:
+        "200":
+          description: Updated existing answer with refreshed AI feedback
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InterviewAnswer"
+        "201":
+          description: Saved new answer with AI feedback
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InterviewAnswer"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "502":
+          description: Upstream AI request failed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
 components:
   schemas:
     HealthStatus:
@@ -506,3 +669,210 @@ components:
         - total
         - stages
         - recentActivity
+    InterviewFocus:
+      type: string
+      enum:
+        - Behavioral
+        - Technical
+        - Mixed
+    InterviewLevel:
+      type: string
+      enum:
+        - Intern
+        - Junior
+        - Mid
+        - Senior
+        - Staff
+    InterviewQuestionType:
+      type: string
+      enum:
+        - Behavioral
+        - Technical
+    InterviewQuestion:
+      type: object
+      properties:
+        id:
+          type: string
+        type:
+          $ref: "#/components/schemas/InterviewQuestionType"
+        text:
+          type: string
+        starHint:
+          type: ["string", "null"]
+      required:
+        - id
+        - type
+        - text
+        - starHint
+    InterviewFeedback:
+      type: object
+      properties:
+        clarity:
+          type: integer
+          minimum: 1
+          maximum: 5
+        structure:
+          type: integer
+          minimum: 1
+          maximum: 5
+        specificity:
+          type: integer
+          minimum: 1
+          maximum: 5
+        summary:
+          type: string
+        strengths:
+          type: array
+          items:
+            type: string
+        improvements:
+          type: array
+          items:
+            type: string
+      required:
+        - clarity
+        - structure
+        - specificity
+        - summary
+        - strengths
+        - improvements
+    InterviewSession:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        role:
+          type: string
+        level:
+          $ref: "#/components/schemas/InterviewLevel"
+        focus:
+          $ref: "#/components/schemas/InterviewFocus"
+        company:
+          type: ["string", "null"]
+        notes:
+          type: ["string", "null"]
+        applicationId:
+          type: ["string", "null"]
+          format: uuid
+        questionCount:
+          type: integer
+          minimum: 0
+        answeredCount:
+          type: integer
+          minimum: 0
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - role
+        - level
+        - focus
+        - company
+        - notes
+        - applicationId
+        - questionCount
+        - answeredCount
+        - createdAt
+        - updatedAt
+    InterviewSessionList:
+      type: object
+      properties:
+        sessions:
+          type: array
+          items:
+            $ref: "#/components/schemas/InterviewSession"
+      required:
+        - sessions
+    InterviewAnswer:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        sessionId:
+          type: string
+          format: uuid
+        questionId:
+          type: string
+        questionText:
+          type: string
+        body:
+          type: string
+        feedback:
+          oneOf:
+            - $ref: "#/components/schemas/InterviewFeedback"
+            - type: "null"
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - sessionId
+        - questionId
+        - questionText
+        - body
+        - feedback
+        - createdAt
+        - updatedAt
+    InterviewSessionDetail:
+      type: object
+      properties:
+        session:
+          $ref: "#/components/schemas/InterviewSession"
+        questions:
+          type: array
+          items:
+            $ref: "#/components/schemas/InterviewQuestion"
+        answers:
+          type: array
+          items:
+            $ref: "#/components/schemas/InterviewAnswer"
+      required:
+        - session
+        - questions
+        - answers
+    CreateInterviewSessionRequest:
+      type: object
+      properties:
+        role:
+          type: string
+          minLength: 1
+        level:
+          $ref: "#/components/schemas/InterviewLevel"
+        focus:
+          $ref: "#/components/schemas/InterviewFocus"
+        company:
+          type: ["string", "null"]
+        notes:
+          type: ["string", "null"]
+        applicationId:
+          type: ["string", "null"]
+          format: uuid
+        questionCount:
+          type: integer
+          minimum: 3
+          maximum: 10
+      required:
+        - role
+        - level
+        - focus
+    SubmitInterviewAnswerRequest:
+      type: object
+      properties:
+        questionId:
+          type: string
+          minLength: 1
+        body:
+          type: string
+          minLength: 1
+      required:
+        - questionId
+        - body

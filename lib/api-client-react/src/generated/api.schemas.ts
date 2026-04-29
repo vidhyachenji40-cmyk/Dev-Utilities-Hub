@@ -134,3 +134,125 @@ export interface PipelineSummary {
   stages: PipelineStageCount[];
   recentActivity: PipelineRecentActivity[];
 }
+
+export type InterviewFocus =
+  (typeof InterviewFocus)[keyof typeof InterviewFocus];
+
+export const InterviewFocus = {
+  Behavioral: "Behavioral",
+  Technical: "Technical",
+  Mixed: "Mixed",
+} as const;
+
+export type InterviewLevel =
+  (typeof InterviewLevel)[keyof typeof InterviewLevel];
+
+export const InterviewLevel = {
+  Intern: "Intern",
+  Junior: "Junior",
+  Mid: "Mid",
+  Senior: "Senior",
+  Staff: "Staff",
+} as const;
+
+export type InterviewQuestionType =
+  (typeof InterviewQuestionType)[keyof typeof InterviewQuestionType];
+
+export const InterviewQuestionType = {
+  Behavioral: "Behavioral",
+  Technical: "Technical",
+} as const;
+
+export interface InterviewQuestion {
+  id: string;
+  type: InterviewQuestionType;
+  text: string;
+  /** @nullable */
+  starHint: string | null;
+}
+
+export interface InterviewFeedback {
+  /**
+   * @minimum 1
+   * @maximum 5
+   */
+  clarity: number;
+  /**
+   * @minimum 1
+   * @maximum 5
+   */
+  structure: number;
+  /**
+   * @minimum 1
+   * @maximum 5
+   */
+  specificity: number;
+  summary: string;
+  strengths: string[];
+  improvements: string[];
+}
+
+export interface InterviewSession {
+  id: string;
+  role: string;
+  level: InterviewLevel;
+  focus: InterviewFocus;
+  /** @nullable */
+  company: string | null;
+  /** @nullable */
+  notes: string | null;
+  /** @nullable */
+  applicationId: string | null;
+  /** @minimum 0 */
+  questionCount: number;
+  /** @minimum 0 */
+  answeredCount: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface InterviewSessionList {
+  sessions: InterviewSession[];
+}
+
+export interface InterviewAnswer {
+  id: string;
+  sessionId: string;
+  questionId: string;
+  questionText: string;
+  body: string;
+  feedback: InterviewFeedback | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface InterviewSessionDetail {
+  session: InterviewSession;
+  questions: InterviewQuestion[];
+  answers: InterviewAnswer[];
+}
+
+export interface CreateInterviewSessionRequest {
+  /** @minLength 1 */
+  role: string;
+  level: InterviewLevel;
+  focus: InterviewFocus;
+  /** @nullable */
+  company?: string | null;
+  /** @nullable */
+  notes?: string | null;
+  /** @nullable */
+  applicationId?: string | null;
+  /**
+   * @minimum 3
+   * @maximum 10
+   */
+  questionCount?: number;
+}
+
+export interface SubmitInterviewAnswerRequest {
+  /** @minLength 1 */
+  questionId: string;
+  /** @minLength 1 */
+  body: string;
+}
