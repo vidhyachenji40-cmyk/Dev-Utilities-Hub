@@ -4,7 +4,7 @@ import path from "path";
 import fs from "fs";
 import { requireAuth } from "../middlewares/requireAuth.js";
 import { db } from "@workspace/db";
-import { jobApplications } from "@workspace/db/schema";
+import { jobApplicationsTable } from "@workspace/db/schema";
 import { eq, and } from "drizzle-orm";
 
 const router = Router();
@@ -50,8 +50,8 @@ router.post(
 
       const [app] = await db
         .select()
-        .from(jobApplications)
-        .where(and(eq(jobApplications.id, id), eq(jobApplications.userId, userId)));
+        .from(jobApplicationsTable)
+        .where(and(eq(jobApplicationsTable.id, id), eq(jobApplicationsTable.userId, userId)));
 
       if (!app) {
         return res.status(404).json({ error: "Application not found" });
@@ -76,9 +76,9 @@ router.post(
       }
 
       const [updated] = await db
-        .update(jobApplications)
+        .update(jobApplicationsTable)
         .set({ ...updates, updatedAt: new Date() })
-        .where(eq(jobApplications.id, id))
+        .where(eq(jobApplicationsTable.id, id))
         .returning();
 
       res.json(updated);
