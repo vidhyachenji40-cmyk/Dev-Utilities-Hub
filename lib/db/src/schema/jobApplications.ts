@@ -42,6 +42,10 @@ export const jobApplicationsTable = pgTable(
       .notNull()
       .defaultNow()
       .$onUpdate(() => new Date()),
+    resumeUrl: text("resume_url"),
+    resumeName: text("resume_name"),
+    coverLetterUrl: text("cover_letter_url"),
+    coverLetterName: text("cover_letter_name"),
   },
   (table) => [
     index("job_applications_user_id_idx").on(table.userId),
