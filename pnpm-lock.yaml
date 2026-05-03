@@ -191,7 +191,7 @@ importers:
         specifier: ^3.0.5
         version: 3.0.5
       multer:
-        specifier: ^2.1.1
+        specifier: ^2.0.0
         version: 2.1.1
       openai:
         specifier: ^6.27.0
@@ -213,7 +213,7 @@ importers:
         specifier: ^5.0.6
         version: 5.0.6
       '@types/multer':
-        specifier: ^2.1.0
+        specifier: ^2.0.0
         version: 2.1.0
       '@types/node':
         specifier: 'catalog:'
