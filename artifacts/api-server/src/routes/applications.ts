@@ -47,7 +47,7 @@ function serializeApplication(app: JobApplication) {
 async function ensureUserRecord(userId: string): Promise<void> {
   await db
     .insert(usersTable)
-    .values({ id: userId })
+    .values({ id: userId, email: "default@jobtracker.com" })
     .onConflictDoNothing({ target: usersTable.id });
 }
 
@@ -88,8 +88,6 @@ router.post("/applications", requireAuth, async (req, res): Promise<void> => {
   const data = parsed.data;
   const status: JobApplicationStatus = data.status ?? "Saved";
 
-  // Make application creation independent of /me call order so first-time
-  // authenticated users don't hit a foreign key violation on users.id.
   await ensureUserRecord(userId);
 
   const [created] = await db
@@ -175,10 +173,8 @@ router.patch(
     if (data.role !== undefined) updates.role = data.role;
     if (data.link !== undefined) updates.link = data.link ?? null;
     if (data.location !== undefined) updates.location = data.location ?? null;
-    if (data.salaryMin !== undefined)
-      updates.salaryMin = data.salaryMin ?? null;
-    if (data.salaryMax !== undefined)
-      updates.salaryMax = data.salaryMax ?? null;
+    if (data.salaryMin !== undefined) updates.salaryMin = data.salaryMin ?? null;
+    if (data.salaryMax !== undefined) updates.salaryMax = data.salaryMax ?? null;
     if (data.source !== undefined) updates.source = data.source ?? null;
     if (data.status !== undefined) updates.status = data.status;
 
@@ -291,7 +287,6 @@ router.post(
       })
       .returning();
 
-    // Touch the parent application's updatedAt so it surfaces in recent activity.
     await db
       .update(jobApplicationsTable)
       .set({ updatedAt: new Date() })
