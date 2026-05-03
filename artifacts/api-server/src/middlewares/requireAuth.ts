@@ -14,7 +14,7 @@ export function requireAuth(
   res: Response,
   next: NextFunction,
 ): void {
-  req.userId = "default-user";
-  req.auth = { userId: "default-user" };
+  req.userId = "00000000-0000-0000-0000-000000000001";
+  req.auth = { userId: "00000000-0000-0000-0000-000000000001" };
   next();
 }
